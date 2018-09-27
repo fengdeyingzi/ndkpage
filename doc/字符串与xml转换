@@ -1,0 +1,98 @@
+java XML字符串和XML DOCUMENT的相互转换
+Sobey 发表于4年前
+   
+原 java XML字符串和XML DOCUMENT的相互转换
+ 收藏
+Sobey  
+发表于 4年前  阅读 11732 收藏 7 点赞 0 评论 0
+在做一般的XML数据交换过程中，我更乐意传递XML字符串，而不是格式化的XML Document。这就涉及到XML字符串和Xml Document的转换问题，说白了这是个很简单的问题，本文就各种XML解析器分别列举如下，以方便自己今后查阅。
+
+
+一、使用最原始的javax.xml.parsers，标准的jdk api
+
+// 字符串转XML
+String xmlStr = "......";
+StringReader sr = new StringReader(xmlStr); 
+InputSource is = new InputSource(sr); 
+DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance(); 
+DocumentBuilder builder=factory.newDocumentBuilder(); 
+Document doc = builder.parse(is);
+
+//XML转字符串
+TransformerFactory  tf  =  TransformerFactory.newInstance();
+Transformer t = tf.newTransformer();
+t.setOutputProperty("encoding","GB23121");//解决中文问题，试过用GBK不行
+ByteArrayOutputStream  bos  =  new  ByteArrayOutputStream();
+t.transform(new DOMSource(doc), new StreamResult(bos));
+String xmlStr = bos.toString();
+
+这里的XML DOCUMENT为org.w3c.dom.Document
+
+二、使用dom4j后程序变得更简单
+
+// 字符串转XML
+String xmlStr = "......";
+Document document = DocumentHelper.parseText(xmlStr);
+
+// XML转字符串 
+Document document = ...;
+String text = document.asXML();
+
+这里的XML DOCUMENT为org.dom4j.Document
+
+三、使用JDOM
+
+JDOM的处理方式和第一种方法处理非常类似
+
+//字符串转XML
+String xmlStr = ".....";
+StringReader sr = new StringReader(xmlStr);
+InputSource is = new InputSource(sr);
+Document doc = (new SAXBuilder()).build(is);
+
+//XML转字符串
+Format format = Format.getPrettyFormat();
+format.setEncoding("gb2312");//设置xml文件的字符为gb2312，解决中文问题
+XMLOutputter xmlout = new XMLOutputter(format);
+ByteArrayOutputStream bo = new ByteArrayOutputStream();
+xmlout.output(doc,bo);
+String xmlStr = bo.toString();
+
+这里的XML DOCUMENT为org.jdom.Document
+
+四、JAVASCRIPT中的处理
+
+
+//字符串转XML
+var xmlStr = ".....";
+var xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+xmlDoc.async=false;
+xmlDoc.loadXML(xmlStr);
+//可以处理这个xmlDoc了
+var name = xmlDoc.selectSingleNode("/person/name");
+alert(name.text);
+
+//XML转字符串
+var xmlDoc = ......;
+var xmlStr = xmlDoc.xml
+
+这里的XML DOCUMENT为javascript版的XMLDOM
+
+转自：http://blog.csdn.net/yhl_621/article/details/614960
+
+© 著作权归作者所有
+分类：Java  字数：384
+标签： java XML字符串和XML DOCUMENT的相互转换
+ 打赏
+ 
+ 点赞
+ 
+ 收藏
+ 
+ 分享
+ 举报
+
++ 关注
+Sobey  
+ 高级程序员  黄浦
+粉丝 5 博文 40 码字总数 15

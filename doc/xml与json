@@ -1,0 +1,155 @@
+对于某一XML格式的文件，例如 assets 文件夹下新建 languages.xml ：
+<?xml version="1.0" encoding="utf-8"?>
+<Languages cat="it">
+    <lan id="1">
+        <name>Java</name>
+        <ide>Eclipse</ide>
+    </lan>
+    <lan id="2">
+        <name>C++</name>
+        <ide>Visual Studio</ide>
+    </lan>
+    <lan id="3">
+        <name>Swift</name>
+        <ide>Xcode</ide>
+    </lan>
+</Languages>
+
+读取XML文件操作：
+            DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = builderFactory.newDocumentBuilder();
+            Document document = builder.parse(getAssets().open("languages.xml"));//将数据源转为Document对象
+            Element element = document.getDocumentElement();//取出<Languages标签中所有的内容（根元素）
+            NodeList list = element.getElementsByTagName("lan");//过滤读取“lan”标签的内容
+            for (int i = 0; i < list.getLength(); i++) {
+                Element lan = (Element) list.item(i);
+                text.append("\n" + lan.getAttribute("id"));//id标签内容
+                text.append("\n" + lan.getElementsByTagName("name").item(0).getTextContent());//name标签内容
+                text.append("\n" + lan.getElementsByTagName("ide").item(0).getTextContent());//ide标签内容
+            }
+
+生成XML文件操作：
+            DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = builderFactory.newDocumentBuilder();
+            //创建XML文件数据结构
+            Document newxml = builder.newDocument();
+            Element languages = newxml.createElement("Languages");//取得根元素
+            languages.setAttribute("cat","it");//键值对
+            Element lan1=newxml.createElement("lan");
+            lan1.setAttribute("id", "1");
+            Element name1 = newxml.createElement("name");
+            name1.setTextContent("Java");
+            Element ide1 = newxml.createElement("ide");
+            ide1.setTextContent("Eclipse");
+            //添加子元素
+            lan1.appendChild(name1);
+            lan1.appendChild(ide1);
+            languages.appendChild(lan1);
+            Element lan2=newxml.createElement("lan");
+            lan2.setAttribute("id", "2");
+            Element name2 = newxml.createElement("name");
+            name2.setTextContent("C++");
+            Element ide2 = newxml.createElement("ide");
+            ide2.setTextContent("Visual Studio");
+            //添加子元素
+            lan2.appendChild(name2);
+            lan2.appendChild(ide2);
+            languages.appendChild(lan2);
+            newxml.appendChild(languages);
+            //转换为String类型来显示
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty("encoding", "utf-8");
+            StringWriter sw = new StringWriter();
+            transformer.transform(new DOMSource(newxml),new StreamResult(sw));
+            text.setText(sw.toString());
+
+具体代码点击
+
+JSON数据
+在 assets 下新建数据文件 jsontext.json：
+{
+  "languages":[
+    {"id":1,"ide":"Eclipse","name":"Java"},
+    {"id":2,"ide":"XCode","name":"Swift"},
+    {"id":3,"ide":"Visual Studio","name":"C++"}
+  ],
+  "cat":"it"
+}
+读取 JSON 格式数据：
+//--------------------- 1 -----------------------------------------
+        //读取JSON格式数据
+        try {
+            InputStreamReader isr = new InputStreamReader(getAssets().open("jsontext.json"), "UTF-8");
+            BufferedReader br = new BufferedReader(isr);
+            String line;
+            StringBuilder builder = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                builder.append(line);
+            }
+            br.close();
+            isr.close();
+            JSONObject root = new JSONObject(builder.toString());
+            System.out.println("cat=" + root.getString("cat"));
+            JSONArray array = root.getJSONArray("languages");
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject lan = array.getJSONObject(i);
+                System.out.println("------------------");
+                System.out.println("id=" + lan.getString("id"));
+                System.out.println("name=" + lan.getString("name"));
+                System.out.println("ide=" + lan.getString("ide"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+创建JSON格式数据：
+//--------------------- 2 -----------------------------------------
+        //创建JSON格式数据
+        try {
+            JSONObject root = new JSONObject();
+            root.put("cat", "it");
+            JSONObject lan1 = new JSONObject();
+            lan1.put("id", 1);
+            lan1.put("ide", "Eclipse");
+            lan1.put("name", "Java");
+            JSONObject lan2 = new JSONObject();
+            lan2.put("id", 2);
+            lan2.put("ide", "Swift");
+            lan2.put("name", "XCode");
+            JSONObject lan3 = new JSONObject();
+            lan3.put("id", 3);
+            lan3.put("ide", "C++");
+            lan3.put("name", "Visual Studio");
+            JSONArray array = new JSONArray();
+            array.put(lan1);
+            array.put(lan2);
+            array.put(lan3);
+            root.put("languages", array);
+            System.out.println(root.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+具体代码点击
+
+
+
+1 0
+上一篇 下一篇
+暂无评论，我去发表~
+相关博文
+android编程：xml文件读取和写入
+Android学习笔记(八)之Android 读写xml文件
+Android中解析XML
+Android向本地写入一个XML文件和解析XML文件
+qt在windows下实现录音放音同步
+Android几种解析XML方式的比较
+Android开发8——利用pull解析器读写XML文件
+Android数据转化为Xml形式给客户端及客户端使用xml数据
+android 在线获取音乐歌词lrc文件
+android 在线获取音乐歌词lrc文件
+我的热门文章

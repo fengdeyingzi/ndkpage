@@ -1,0 +1,258 @@
+android-pull方式解析xml文件以及XML文件的序列化
+
+android解析XML　　　　　　---------------------------基础要像磐石
+
+在android平台上可以使用SAX、DOM和自带的Pull解析器解析xml文件，本文主要介绍使用pull方式解析xml。pull解析器的运行方式和SAX解析器相似，他也有开始元素和结束元素事件，并且可以循环解析。可以使用nextText()方法获取Text类型元素的值。
+
+//如果涉及某些存储操作，需要添加Users权限
+
+下面是将要解析的XML文件，将此xml文件存放在assets目录下。
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<info city='3'>
+    <name>深圳</name>
+    <temp>28℃</temp>
+    <weather>多云</weather>
+    <msg>天气适宜, 穿个比基尼!</msg>
+</info>
+
+创建一个javabean来存放解析出来的数据，创建类WeatherInfo，如下
+
+
+public class WeatherInfo {
+    private String name;
+    private String temp;
+    private String weather;
+    private String msg;
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getTemp() {
+        return temp;
+    }
+    public void setTemp(String temp) {
+        this.temp = temp;
+    }
+    public String getWeather() {
+        return weather;
+    }
+    public void setWeather(String weather) {
+        this.weather = weather;
+    }
+    public String getMsg() {
+        return msg;
+    }
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+    @Override
+    public String toString() {
+        return "[name=" + name + ", temp=" + temp + ", weather="
+                + weather + ", msg=" + msg + "]";
+    }
+    
+}
+
+ 
+
+下面开始解析
+
+
+       //Context上下文，保存当前应用程序，系统资源和配置etc
+        AssetManager am=this.getAssets();
+        
+        try {
+          InputStream is=am.open("weather.xml");
+           //1，创建xml解析器
+            XmlPullParser parser=Xml.newPullParser();
+           //2,初始化解析器，设置要解析的流数据，并设置编码方式
+            parser.setInput(is,"utf-8");
+            //3,循环解析
+            int type=parser.getEventType();
+        
+          WeatherInfo info=new WeatherInfo();
+            while(type!=XmlPullParser.END_DOCUMENT){
+                //如果是开始标签
+                if(type==XmlPullParser.START_TAG){
+                    if("name".equals(parser.getName())){
+                        String name=parser.nextText();//获取文本数据
+                            info.setName(name);
+                    }else if("temp".equals(parser.getName())){
+                        info.setTemp(parser.nextText());
+                    }else if("weather".equals(parser.getName())){
+                        info.setWeather(parser.nextText());
+                    }else if("msg".equals(parser.getName())){
+                        info.setMsg(parser.nextText());
+                    }
+                }
+                //让解析器移动到下一个
+               type=parser.next();
+                //关闭流
+               is.close();
+
+             tv_weather.setText(info.toString());
+           }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+Pull解析器的工作方式为允许应用程序代码主动从解析器中获取事件，正因为是主动获取事件，因此可以随时跳出。
+
+ 
+
+---------------------------------------------------我是快乐的分割线--------------------------------------------------
+
+序列化就是把对象转换成易于传输的形式。反序列化是在流中重新构建对象 XML序列化只将对象的公共字段和属性值序列化为XML流。
+
+XML序列化不能转换方法、索引器、私有字段或只读属性（只读集合除外）。
+
+XML序列化的核心是 XmlSerializer类
+
+步骤：
+
+1，设置生成xml文件位置
+2，创建xml序列化器，并创建输出流
+3，写数据。（可以使用循环，这样就不那么蛋疼了）
+4，最后，千万不要忘记关闭流！！！千万不要忘记关闭流！！！千万不要忘记关闭流！！！
+
+　　　　//设置生成的xml文件的位置在/data/data/包名/cache目录下
+        String path = this.getCacheDir().getPath();
+        File file = new File(path, "info.xml");
+        //
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            // 1,创建XML序列化器
+            XmlSerializer serializer = Xml.newSerializer();
+            // 2,初始化序列化器，并设置输出流
+            serializer.setOutput(fos, "utf-8");// fos 是导出的文件位置
+
+            // 3,写数据,下面是一个无聊且蛋疼的过程
+            serializer.startDocument("utf-8", true);
+            // 开始标签
+            // Parameters:
+            // namespace
+            // name
+            serializer.startTag(null, "info");
+            serializer.startTag(null, "name");
+            // 设置内容
+            // Writes text, where special XML chars are escaped automatically
+            serializer.text("深圳");
+            serializer.endTag(null, "name");
+
+            serializer.startTag(null, "temp");
+            serializer.text("33℃");
+            serializer.endTag(null, "temp");
+
+            serializer.startTag(null, "weather");
+            serializer.text("多云");
+            serializer.endTag(null, "weather");
+
+            serializer.startTag(null, "msg");
+            serializer.text("天气晴朗，出来看大腿啊！！！");
+            serializer.endTag(null, "msg");
+
+            // 结束标签
+            serializer.endTag(null, "info");
+
+            serializer.endDocument();
+
+            // 不要忘记关闭流
+            // 不要忘记关闭流
+            // 不要忘记关闭流,重要的事情说三遍
+            fos.close();
+            Toast.makeText(getApplicationContext(), "成功", 0).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+序列化生成的XML文件如下
+
+
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?> 
+<info>
+  <name>深圳</name> 
+  <temp>33℃</temp> 
+  <weather>多云</weather> 
+  <msg>天气晴朗，出来看大腿啊！！！</msg> 
+</info>
+
+ 
+
+温故而知新
+分类: android UI
+标签: android, xml解析
+好文要顶 关注我 收藏该文  
+ MockingBird、
+关注 - 6
+粉丝 - 0
++加关注
+1 0
+» 下一篇：android-数据库SQLite相关
+posted @ 2015-06-26 12:45 MockingBird、 阅读(287) 评论(2) 编辑 收藏
+
+评论列表
+   #1楼 2015-06-26 18:03 地下精神  
+恩恩,写的不错,很有见地
+支持(0)反对(0)
+   #2楼[楼主] 2015-06-26 18:04 MockingBird、  
+@ 地下精神
+这些都是很基础的！多谢支持
+支持(0)反对(0)
+刷新评论刷新页面返回顶部
+注册用户登录后才能发表评论，请 登录 或 注册，访问网站首页。
+【推荐】50万行VC++源码: 大型组态工控、电力仿真CAD与GIS源码库
+【域名】腾讯云 新注册用户域名抢购1元起
+【推荐】报表开发有捷径：快速设计轻松集成，数据可视化和交互
+
+最新IT新闻:
+· 北京最大的宝马i3试驾车队倒闭了，愿共享汽车从此再无豪车
+· 内存涨得比房价还快，背后到底有什么秘密？
+· 终于来了！诺基亚8开启安卓8.0公测
+· 马云获科技创业名誉博士学位：鼓励年轻人不要惧怕未来
+· 美国研发全球最快超级计算机 明年完成
+» 更多新闻...
+
+最新知识库文章:
+· 实用VPC虚拟私有云设计原则
+· 如何阅读计算机科学类的书
+· Google 及其云智慧
+· 做到这一点，你也可以成为优秀的程序员
+· 写给立志做码农的大学生
+» 更多知识库文章...
+公告
+昵称：MockingBird、
+园龄：2年5个月
+粉丝：0
+关注：6
++加关注
+<	2017年10月	>
+日	一	二	三	四	五	六
+24	25	26	27	28	29	30
+1	2	3	4	5	6	7
+8	9	10	11	12	13	14
+15	16	17	18	19	20	21
+22	23	24	25	26	27	28
+29	30	31	1	2	3	4
+搜索
+ 
+ 
+我的标签
+android(1)
+android_ui_tips(1)
+androidstudio新建项目 隐藏标题栏(1)
+SQLite(1)
+xml解析(1)
+点击事件写法(1)
+消息处理机制初步(1)
+样式主题(1)
+随笔分类
+android Tips(1)
+android UI(1)
+android 进阶
+android 设计模式
+随笔档案
