@@ -45,6 +45,16 @@ public class FileUtils
 		}
 	}
 	
+	/*
+	创建软链接
+	*/
+	public void createFile(){
+		File file = new File("");
+		//file.crea
+		
+		//java.io.file.Files.createsymboliclink
+		
+	}
     
     /*
     写入一个文本文件

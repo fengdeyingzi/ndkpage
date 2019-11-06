@@ -30,6 +30,7 @@ public class Install
 	static int versionCode=0;
 	static Handler handler =null;
 	static Activity activity=null;
+	static boolean isNoBackUp=true;
 	static String updateUrl = "http://www.yzjlb.net/app/aide/tools/";
 	static String str_help="使用本软件安装ndk需要4步：\n"
 	+"\n"
@@ -64,11 +65,17 @@ public class Install
 	
 	
 	static String sh = "/sdcard/.aide/gcc2222222.sh";
+	
+	static String data_files = "/data/data/com.aide.ui/files/";
 	//20160801
 	public static void main(String[] args) throws InterruptedException, IOException
 	{
 		//
 		Thread.sleep(500);
+		if(isNoBackUp){
+			data_files = "/data/data/com.aide.ui/no_backup/";
+			System.out.println("files路径:"+data_files);
+		}
 		
   	activity = TermTool.getActivity();
 		if(activity==null)
@@ -76,13 +83,20 @@ public class Install
 		//获取包名
 		else
 		{
-			
-			
+			if(isNoBackUp){
+				data_files = "/data/data/"+AppTool.getPageName(activity)+"/no_backup/";
+			}
+			else
+		data_files = activity.getFilesDir().getPath();
+		
+		//data_files = activity.getDatabasePath("no_backup").toString();
+		//data_files = activity.getDir("no_backup",0).getParentFile().getPath()+"/no_backup";
 		page_aide = AppTool.getPageName(activity);
 		versionCode = AppTool.getVersionCode(activity);
 		versionName = AppTool.getVersionName(activity);
 		System.out.println(page_aide);
 		System.out.println("当前aide版本:"+versionName+"("+versionCode+")");
+		System.out.println("files路径："+data_files);
 		handler = new Handler(activity.getMainLooper());
 		handler.post(new Runnable()
 			{
@@ -119,7 +133,7 @@ public class Install
 		String menu1 = input.nextLine();
 		if(menu1.equals("1")) //查看files目录
 		{
-			File file_aide = new File("data/data/"+page_aide+"/files");
+			File file_aide = new File(data_files);
 			File list[] = file_aide.listFiles();
 			for(File value:list)
 			{
@@ -131,11 +145,15 @@ public class Install
 		}
 		else if(menu1.equals("2")) //检测ndk安装目录
 		{
+			if(isNoBackUp){
+				createDirAll_new();
+			}
+			else
 			createDirAll();
 		}
 		else if(menu1.equals("3")) //备份
 		{
-			File file_files = new File("/data/data/"+page_aide+"/files");
+			File file_files = new File(data_files+"");
 			File[] files = file_files.listFiles();
 			File file_pack=null;
 			for(File file:files)
@@ -168,7 +186,7 @@ public class Install
 				continue;
 			}
             
-			File file_undir = new File("/data/data/"+page_aide+"/files");
+			File file_undir = new File(data_files);
 		File file_ndk = null;
 		File file_dir[] = file_undir.listFiles();
 		for(File file : file_dir)
@@ -289,7 +307,43 @@ public class Install
 		return true;
 	}
 	
-	
+	public static void createDirAll_new()
+	{
+		File file = null;
+		File file_in=null;
+		for(int year=17;year<20;year++)
+		{
+			for(int month=1;month<=12;month++)
+			{
+				for(int day=1;day<31;day++)
+				{
+					for(int n=0;n<9;n++){
+					String dir = Str.sprintf(data_files+"ndksupport-%d%02d%02d000%d",year,month,day,n);
+					file=new File(dir);
+					file_in = new File(file,".installed");
+
+					if(file.exists())
+					{
+						System.out.println(file.getName()+"已存在");
+					}
+					else
+					{
+						file.mkdirs();
+						try
+						{
+							file_in.createNewFile();
+						}
+						catch (IOException e)
+						{
+							e.printStackTrace();
+						}
+					}
+					}
+				}
+			}
+		}
+		System.out.println("创建完毕");
+	}
 	
 	//批量创建文件夹用于检测aide安装目录，如果有一个目录木有被aide删除，那么那个目录就是安装目录
 	public static void createDirAll()
@@ -302,7 +356,7 @@ public class Install
 			{
 				for(int day=1;day<31;day++)
 				{
-					String dir = Str.sprintf("data/data/%s/files/ndksupport-%d%02d%02d",page_aide,year,month,day);
+					String dir = Str.sprintf(data_files+"ndksupport-%d%02d%02d",year,month,day);
 					file=new File(dir);
 					file_in = new File(file,".installed");
 					
